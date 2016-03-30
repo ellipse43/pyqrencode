@@ -1,5 +1,9 @@
 from qrencode import Encoder
+import time
 
 enc = Encoder()
-im = enc.encode('http://bit.ly', { 'width': 100 })
-im.save('out.png')
+t  = time.time()
+for x in range(10000):
+    im = enc.encode('3502110032014120000010311045116ypR201603302bd', width=200, version=1, border=8)
+    im.save('out.png')
+print time.time() - t

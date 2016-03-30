@@ -1,5 +1,5 @@
-from ImageOps import expand
-from Image import fromstring
+from PIL.ImageOps import expand
+from PIL.Image import frombytes
 
 
 cdef extern from "qrencode.h":
@@ -7,17 +7,17 @@ cdef extern from "qrencode.h":
     int QR_ECLEVEL_M
     int QR_ECLEVEL_Q
     int QR_ECLEVEL_H
-    
+
     int QR_MODE_NUM
     int QR_MODE_AN
     int QR_MODE_8
     int QR_MODE_KANJI
-    
+
     ctypedef struct QRcode:
         int version
         int width
         unsigned char *data
-    
+
     QRcode *QRcode_encodeString(char *string, int version, int level, int hint, int casesensitive)
 
 
@@ -30,27 +30,27 @@ cdef class Encoder:
         'version': 5,
         'case_sensitive': True
     }
-    
+
     def __cinit__(self):
         pass
-    
+
     def __dealloc__(self):
         pass
-    
-    def encode(self, char *text, options={}):
+
+    def encode(self, char *text, **options):
         cdef QRcode *_c_code
         cdef unsigned char *data
-        
+
         opt = self.default_options
         opt.update(options)
-        
+
         border = opt.get('border')
         w = opt.get('width') - (border * 2)
         v = opt.get('version')
         mode = opt.get('mode')
         ec_level = opt.get('ec_level')
         case_sensitive = opt.get('case_sensitive')
-       
+
         # encode the test as a QR code
         str_copy = text
         str_copy = str_copy + '\0'
@@ -58,11 +58,11 @@ cdef class Encoder:
         version = _c_code.version
         width = _c_code.width
         data = _c_code.data
-        
+
         rawdata = ''
         dotsize = w / width
         realwidth = width * dotsize
-        
+
         # build raw image data
         for y in range(width):
             line = ''
@@ -73,8 +73,8 @@ cdef class Encoder:
                     line += dotsize * chr(255)
             lines = dotsize * line
             rawdata += lines
-        
+
         # create PIL image w/ border
-        image = expand(fromstring('L', (realwidth, realwidth), rawdata), border, 255)
-        
+        image = expand(frombytes('L', (realwidth, realwidth), rawdata), border, 255)
+
         return image
